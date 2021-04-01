@@ -1,4 +1,4 @@
-#Projet SGBD#
+# Projet SGBD
 
 Suivre le projet avec [Trello](https://trello.com/invite/b/pqxv6eIj/3843ead3be6efb135dd93262ab91d076/projet-sgbd)
 
@@ -10,9 +10,9 @@ Côté back, utiliser express, puppeteer (pour récupérer les infos des pages a
 
 Le document users va permettre une authentification et un stockage des produits que l'utilisateur veut surveiller, avec un sous-document contenant la liste des dits produits à surveiller ainsi que le seuil de prix pour lequel envoyer un e-mail/notification. Il y aura un document avec tous les produits et urls et un document des prix à côté. Voir pour faire en sorte que le document détruise les plus anciens éléments automatiquement pour économiser le volume de données. Enfin, un document alerts qui contiendra les infos envoyées par e-mail quand l'application enclenche un envoi, et permettra un suivi des envois d'e-mails.
 
-##Structure des documents (provisoire)##
+## Structure des documents (provisoire)
 
-```json
+```javascript
 Products
 {
 	"_id",
