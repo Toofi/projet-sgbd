@@ -1,0 +1,23 @@
+{
+  "name": "amazin-tracker",
+  "version": "1.0.0",
+  "description": "A simple price tracker for Amazon urls, with a feature with emails and price thresholds",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Toofi/projet-sgbd.git"
+  },
+  "author": "Quentin Herpoel",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Toofi/projet-sgbd/issues"
+  },
+  "homepage": "https://github.com/Toofi/projet-sgbd#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1"
+  }
+}
