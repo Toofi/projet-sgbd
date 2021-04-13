@@ -1,7 +1,7 @@
 const MongoClient = require('mongodb').MongoClient;
-const assert = require('assert');
+const userConstraints = require('./usersConstraints');
 
-const url = "mongodb://localhost:27017";
+const url = "mongodb://localhost:29740";
 const dbName = 'quentin';
 
 const getDb = async () => {
@@ -9,6 +9,7 @@ const getDb = async () => {
   try {
     const client = await MongoClient.connect(url, { useUnifiedTopology: true });
     db = client.db(dbName);
+    await userConstraints(db);
   } catch (error) {
     console.error(error);
   }
