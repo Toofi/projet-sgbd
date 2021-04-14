@@ -17,8 +17,7 @@ Products
 {
 	"_id",
 	"name": string,
-	"url": string,
-	"created": timestamp
+	"url": string
 }
 Users
 {
@@ -32,8 +31,7 @@ Users
 		[{
 			"productId": id,
 			"priceThreshold": decimal	
-		}],
-	"created": timestamp
+		}]
 }
 Prices
 {
@@ -41,14 +39,12 @@ Prices
 	"productId": id,
 	"price": decimal,
 	"date": datetime,
-	"isPromo": boolean,
-	"created": timestamp
+	"isPromo": boolean
 }
 Alerts
 {
 	"_id",
 	"price": decimal,
-	"productId": id,
-	"created": timestamp
+	"productId": id
 }
 ```

@@ -19,10 +19,6 @@ module.exports = async (db) => {
             bsonType: "decimal",
             description: "must be a decimal and is required",
           },
-          created: {
-            bsonType: "timestamp",
-            description: "must be a timestamp and is required",
-          }
         }
       }
     }

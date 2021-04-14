@@ -4,7 +4,7 @@ const pricesConstraints = require('./pricesConstraints');
 const productsConstraints = require('./productsConstraints');
 const alertsConstraints = require('./alertsConstraints');
 
-const url = "mongodb://localhost:29203";
+const url = "mongodb://localhost:29754";
 const dbName = 'quentin';
 
 const getDb = async () => {

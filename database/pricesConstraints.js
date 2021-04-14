@@ -26,11 +26,7 @@ module.exports = async (db) => {
           isPromo: {
             bsonType: "bool",
             description: "must be a boolean and is required",
-          },
-          created: {
-            bsonType: "timestamp",
-            description: "must be a timestamp and is required",
-          },
+          }
         }
       }
     }
