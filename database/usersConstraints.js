@@ -24,8 +24,11 @@ module.exports = async (db) => {
             description: "must be a string and is required",
           },
           emails: {
-            bsonType: "string",
+            bsonType: "array",
             description: "must be a string and is required",
+            items: {
+              bsonType: "string",
+            }
           },
           password: {
             bsonType: "string",
@@ -42,8 +45,8 @@ module.exports = async (db) => {
                   description: "must be an objectId and is required",
                 },
                 priceThreshold: {
-                  bsonType: "double",
-                  description: "must be a double and isn't required"
+                  bsonType: "decimal",
+                  description: "must be a decimal and isn't required"
                 }
               }
             }
