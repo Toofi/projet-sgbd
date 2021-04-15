@@ -1,5 +1,5 @@
 module.exports = async (db) => {
-  const collectionName = "prices";
+  const collectionName = "alerts";
   const existingCollections = await db.listCollections().toArray();
   if (existingCollections.some(e => e.name === collectionName)) {
     return;
@@ -9,7 +9,7 @@ module.exports = async (db) => {
     validator: {
       $jsonSchema: {
         bsonType: "object",
-        required: ["productId", "price", "date", "isPromo", "created"],
+        required: ["productId", "price", "created"],
         properties: {
           productId: {
             bsonType: "objectId",
@@ -18,18 +18,6 @@ module.exports = async (db) => {
           price: {
             bsonType: "decimal",
             description: "must be a decimal and is required",
-          },
-          date: {
-            bsonType: "date",
-            description: "must be a date and is required",
-          },
-          isPromo: {
-            bsonType: "bool",
-            description: "must be a boolean and is required",
-          },
-          created: {
-            bsonType: "timestamp",
-            description: "must be a timestamp and is required",
           },
         }
       }

@@ -50,10 +50,6 @@ module.exports = async (db) => {
                 }
               }
             }
-          },
-          created: {
-            bsonType: "timestamp",
-            description: "must be a timestamp and is required"
           }
         }
       }
