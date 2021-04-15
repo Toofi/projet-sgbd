@@ -1,7 +1,7 @@
 const MongoClient = require('mongodb').MongoClient;
-const userConstraints = require('./constraints/usersConstraints');
-const pricesConstraints = require('./constraints/pricesConstraints');
-const productsConstraints = require('./constraints/productsConstraints');
+const userConstraints = require('../constraints/usersConstraints');
+const pricesConstraints = require('../constraints/pricesConstraints');
+const productsConstraints = require('../constraints/productsConstraints');
 const alertsConstraints = require('../constraints/alertsConstraints');
 
 const url = "mongodb://localhost:29754";
