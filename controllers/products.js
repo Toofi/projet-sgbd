@@ -1,5 +1,4 @@
-const { response } = require('express');
-const { Db, ObjectID, Timestamp } = require('mongodb');
+const { Db, ObjectID } = require('mongodb');
 
 module.exports = (app, db) => {
   if (!(db instanceof Db)) {
