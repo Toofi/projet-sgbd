@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
 
 class Puppeteer {
-  //factoriser la phase de connexion
+  
   scrapPrice = async (url) => {
     const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
@@ -31,7 +31,7 @@ class Puppeteer {
     const page = await browser.newPage();
     await page.goto(url);
     const image = await page.evaluate(() => {
-      const scrappedProduct = document.querySelector('#ppd')
+      const scrappedProduct = document.querySelector('#ppd');
       const scrappedImage = scrappedProduct.querySelector('#landingImage').src;
       return scrappedImage;
     });
@@ -39,13 +39,41 @@ class Puppeteer {
   };
 
   scrapName = async (url) => {
-    const page = scrapWebPage(url);
+    const browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
+    await page.goto(url);
     const name = await page.evaluate(() => {
-      const scrappedProduct = document.querySelector('#ppd')
+      const scrappedProduct = document.querySelector('#ppd');
       const scrappedName = scrappedProduct.querySelector('#productTitle').textContent.trim();
       return scrappedName;
     });
     return name;
+  };
+
+  scrapAll = async (url) => {
+    const browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
+    await page.goto(url);
+    const all = await page.evaluate(() => {
+      const scrappedProduct = document.querySelector('#ppd');
+      const scrappedPrice = (() => {
+        let price;
+        let isPromo = false;
+        if (document.querySelector('#priceblock_dealprice')) {
+          price = scrappedProduct.querySelector('#priceblock_dealprice').textContent;
+          isPromo = true;
+        } else if (document.querySelector('#priceblock_ourprice')) {
+          price = scrappedProduct.querySelector('#priceblock_ourprice').textContent;
+        } else {
+          price = scrappedProduct.querySelector('#priceblock_saleprice').textContent;
+        }
+        return { price, isPromo };
+      })();
+      const scrappedName = scrappedProduct.querySelector('#productTitle').textContent.trim();
+      const scrappedImage = scrappedProduct.querySelector('#landingImage').src;
+      return { scrappedPrice, scrappedName, scrappedImage };
+    });
+    return all;
   };
 
 };
