@@ -1,5 +1,7 @@
 const { Db, ObjectID } = require('mongodb');
 
+const Puppeteer = require('./puppeteer');
+
 module.exports = (app, db) => {
   if (!(db instanceof Db)) {
     throw new Error("Invalid Database");
@@ -7,9 +9,13 @@ module.exports = (app, db) => {
   const productsCollection = db.collection("products");
 
   app.post('/api/products', async (req, res) => {
-    const data = req.body;
+    let url = req.body;
     try {
-      const response = await productsCollection.insertOne(data);
+      console.log(url.url);
+      const puppet = new Puppeteer();
+      let productScrapped = await puppet.scrapNameAndImage(url.url);
+      console.log(productScrapped);
+      const response = await productsCollection.insertOne({ name: productScrapped.scrappedName, url: url.url, image: productScrapped.scrappedImage });
       if (response.result.n !== 1 || response.result.ok !== 1) {
         return res.status(400).json({ error: "impossible to create the product" });
       }
