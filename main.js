@@ -6,6 +6,7 @@ const Puppeteer = require('./controllers/puppeteer');
 const products = require('./controllers/products');
 
 const databaseConnexion = require('./database/connexion');
+const prices = require('./controllers/prices');
 
 const app = express();
 const port = 3000;
@@ -21,6 +22,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
   const db = await databaseConnexion();
 
   products(app, db);
+  prices(db);
 
   app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
