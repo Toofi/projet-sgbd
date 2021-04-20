@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
 
 class Puppeteer {
-  
+
   scrapPrice = async (url) => {
     const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
@@ -48,6 +48,19 @@ class Puppeteer {
       return scrappedName;
     });
     return name;
+  };
+
+  scrapNameAndImage = async (url) => {
+    const browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
+    await page.goto(url);
+    const nameAndImage = await page.evaluate(() => {
+      const scrappedProduct = document.querySelector('#ppd');
+      const scrappedName = scrappedProduct.querySelector('#productTitle').textContent.trim();
+      const scrappedImage = scrappedProduct.querySelector('#landingImage').src;
+      return { scrappedName, scrappedImage };
+    });
+    return nameAndImage;
   };
 
   scrapAll = async (url) => {
