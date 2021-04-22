@@ -2,7 +2,9 @@ const { response } = require('express');
 const { Db, ObjectID } = require('mongodb');
 const Puppeteer = require('./puppeteer');
 
-module.exports = async (db) => {
+let cron = require('node-cron');
+
+module.exports = async (app, db) => {
   if (!(db instanceof Db)) {
     throw new Error("Invalid Database");
   }
@@ -15,8 +17,9 @@ module.exports = async (db) => {
 
   let puppet = new Puppeteer();
 
-  let postPrices = async (products) => {
+  let scanPrices = async (products) => {
     try {
+
       for (e in products) {
         let scrappedPrice = await puppet.scrapPrice(products[e].url);
         let data = {
@@ -30,23 +33,21 @@ module.exports = async (db) => {
           console.log("impossible to create the price");
         }
         const [price] = response.ops;
-        console.log('postPrices ok');
+        console.log('༼ つ ◕_◕ ༽つ '+e+': postPrices ok');
       }
     } catch (e) {
       console.log(e);
     }
   };
 
-  setInterval(() => {
-    postPrices(productsIdAndUrls);
-    
-  }, 10000);
+  cron.schedule('1 * * * *', () => {
+    console.log('scan de tous les produits toutes les heures ...');
+    scanPrices(productsIdAndUrls);
+  });
 
-  // let getPrices = async (products) => {
-  //   for (product in products){
-  //     let price = await puppet.scrapPrice(product.url);
-  //     console.log(price);
-  //   }
-  // };
-  // getPrices(products);
+  app.get('/api/prices', async (req, res) => {
+    let prices = await pricesCollection.find().toArray();
+    res.json(prices);
+  });
+
 };

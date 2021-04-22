@@ -8,6 +8,11 @@ module.exports = (app, db) => {
   }
   const productsCollection = db.collection("products");
 
+  app.get('/api/products', async (req, res) => {
+    let products = await productsCollection.find().toArray();
+    res.json(products);
+  });
+
   app.post('/api/products', async (req, res) => {
     let url = req.body;
     try {
@@ -30,4 +35,5 @@ module.exports = (app, db) => {
       return res.status(400).json({ error: "impossible to create the product" });
     }
   });
+
 };
