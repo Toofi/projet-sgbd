@@ -8,6 +8,11 @@ module.exports = (app, db) => {
   }
   const productsCollection = db.collection("products");
 
+  app.get('/api/products', async (req, res) => {
+    let products = await productsCollection.find().toArray();
+    res.json(products);
+  });
+
   app.post('/api/products', async (req, res) => {
     let url = req.body;
     try {
@@ -15,7 +20,11 @@ module.exports = (app, db) => {
       const puppet = new Puppeteer();
       let productScrapped = await puppet.scrapNameAndImage(url.url);
       console.log(productScrapped);
-      const response = await productsCollection.insertOne({ name: productScrapped.scrappedName, url: url.url, image: productScrapped.scrappedImage });
+      const response = await productsCollection.insertOne({
+        name: productScrapped.scrappedName,
+        url: url.url,
+        image: productScrapped.scrappedImage
+      });
       if (response.result.n !== 1 || response.result.ok !== 1) {
         return res.status(400).json({ error: "impossible to create the product" });
       }
@@ -26,4 +35,5 @@ module.exports = (app, db) => {
       return res.status(400).json({ error: "impossible to create the product" });
     }
   });
+
 };
