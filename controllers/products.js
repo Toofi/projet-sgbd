@@ -7,6 +7,7 @@ module.exports = (app, db) => {
     throw new Error("Invalid Database");
   }
   const productsCollection = db.collection("products");
+  const pricesCollection = db.collection("prices");
 
   app.get('/api/products', async (req, res) => {
     let products = await productsCollection.find().toArray();
@@ -35,5 +36,18 @@ module.exports = (app, db) => {
       return res.status(400).json({ error: "impossible to create the product" });
     }
   });
-
+  
+  app.delete('/api/products/:productId', async (req, res) => {
+    const { productId } = req.params;
+    const _id = new ObjectID(productId);
+    const productResponse = await productsCollection.findOneAndDelete({ _id });
+    if (productResponse.value === null) {
+      return res.status(404).send({ error: "produit introuvable, impossible de le supprimer." });
+    }
+    const pricesResponse = await pricesCollection.deleteMany({ "productId": _id });
+    if (pricesResponse.value === null){
+      return res.status(404).send({ error: "aucun prix à supprimer"});
+    }
+    res.status(204).send();
+  });
 };
