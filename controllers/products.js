@@ -36,7 +36,24 @@ module.exports = (app, db) => {
       return res.status(400).json({ error: "impossible to create the product" });
     }
   });
-  
+
+  app.put('/api/products/:productId', async (req, res) => {
+    const { productId } = req.params;
+    const name = req.body;
+    const _id = new ObjectID(productId);
+    const response = await productsCollection.findOneAndUpdate(
+      { _id },
+      { $set: name },
+      {
+        returnOriginal: false,
+      },
+    );
+    if (response.ok !== 1) {
+      return res.status(400).json({ error: "impossible to update the product name" });
+    }
+    res.json(response.value);
+  });
+
   app.delete('/api/products/:productId', async (req, res) => {
     const { productId } = req.params;
     const _id = new ObjectID(productId);
@@ -45,8 +62,8 @@ module.exports = (app, db) => {
       return res.status(404).send({ error: "produit introuvable, impossible de le supprimer." });
     }
     const pricesResponse = await pricesCollection.deleteMany({ "productId": _id });
-    if (pricesResponse.value === null){
-      return res.status(404).send({ error: "aucun prix à supprimer"});
+    if (pricesResponse.value === null) {
+      return res.status(404).send({ error: "aucun prix à supprimer" });
     }
     res.status(204).send();
   });
