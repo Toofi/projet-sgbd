@@ -7,6 +7,7 @@ const products = require('./controllers/products');
 
 const databaseConnexion = require('./database/connexion');
 const prices = require('./controllers/prices');
+const users = require('./controllers/users');
 
 const app = express();
 const port = 3000;
@@ -19,6 +20,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
   products(app, db);
   prices(app, db);
+  users(app, db);
 
   app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
