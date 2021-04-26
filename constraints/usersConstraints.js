@@ -9,9 +9,9 @@ module.exports = async (db) => {
     validator: {
       $jsonSchema: {
         bsonType: "object",
-        required: ["nickName", "firstName", "lastName", "emails", "password", "created"],
+        required: ["username", "firstName", "lastName", "emails", "password"],
         properties: {
-          nickName: {
+          username: {
             bsonType: "string",
             description: "must be a string and is required",
           },
@@ -38,7 +38,7 @@ module.exports = async (db) => {
             bsonType: "array",
             items: {
               bsonType: "objectId",
-              required: ["productId"],
+              required: ["productId", "isAlertAllowed"],
               properties: {
                 productId: {
                   bsonType: "string",
@@ -47,6 +47,10 @@ module.exports = async (db) => {
                 priceThreshold: {
                   bsonType: "decimal",
                   description: "must be a decimal and isn't required"
+                },
+                isAlertAllowed: {
+                  bsonType: "bool",
+                  description: "must be a boolean and is required"
                 }
               }
             }
