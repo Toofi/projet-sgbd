@@ -10,7 +10,6 @@ const databaseConnexion = require('./database/connexion');
 const passport = require('passport');
 const { myPassportLocal, myPassportJWT } = require('./passport');
 
-
 const app = express();
 const port = 3000;
 
