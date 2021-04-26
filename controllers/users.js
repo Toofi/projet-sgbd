@@ -1,6 +1,8 @@
 const { json } = require('express');
 const { Db, ObjectID } = require('mongodb');
 const bcrypt = require('bcrypt');
+const passport = require('passport');
+const jwt = require('jsonwebtoken');
 
 module.exports = async (app, db) => {
   if (!(db instanceof Db)) {
@@ -8,6 +10,26 @@ module.exports = async (app, db) => {
   }
 
   const usersCollection = await db.collection('users');
+
+  app.post('/login', async (req, res) => {
+    passport.authenticate('local', { session: false }, (err, user) => {
+      if (err || !user) {
+        return res.status(400).json({
+          message: "something is not right",
+          user: user
+        });
+      }
+      req.login(user, { session: false }, (err) => {
+        if (err) {
+          return res.send(err);
+        }
+        delete user.password;
+        const token = jwt.sign(user, "maSignature");
+        return res.json({ user, token });
+      });
+    })(req, res);
+
+  });
 
   app.get('/api/users', async (req, res) => {
     try {
