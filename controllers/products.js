@@ -23,14 +23,8 @@ module.exports = (app, db) => {
     const _id = new ObjectID(decodedJWT._id);
     let data = req.body;
     let url = data.url;
-    let priceThreshold = null;
-    if (data.priceThreshold) {
-      priceThreshold = Decimal128.fromString(data.priceThreshold);
-    } else {
-      priceThreshold = Decimal128.fromString("0.00");
-    }
+    let priceThreshold;
     let isAlertAllowed = data.isAlertAllowed === "true";
-
     try {
       const puppet = new Puppeteer();
       let productScrapped = await puppet.scrapNameAndImage(url);
@@ -40,17 +34,17 @@ module.exports = (app, db) => {
         image: productScrapped.scrappedImage
       });
       const [product] = response.ops;
+      if (data.priceThreshold) {
+        priceThreshold = Decimal128.fromString(data.priceThreshold);
+        query = { $push: { trackedProducts: { productId: product._id, priceThreshold, isAlertAllowed }}};
+      } else {
+        isAlertAllowed = false;
+        query = { $push: { trackedProducts: { productId: product._id, isAlertAllowed }}};
+      }
+
       const trackedProductsUpdated = await usersCollection.findOneAndUpdate(
         { _id },
-        {
-          $push: {
-            trackedProducts: {
-              productId: product._id,
-              priceThreshold,
-              isAlertAllowed,
-            }
-          }
-        }
+        query,
       );
       if (response.result.n !== 1 || response.result.ok !== 1) {
         return res.status(400).json({ error: "impossible to create the product" });
