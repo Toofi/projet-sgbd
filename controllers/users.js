@@ -3,7 +3,6 @@ const { Db, ObjectID } = require('mongodb');
 const bcrypt = require('bcrypt');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
-const jwtDecode = require('jwt-decode');
 
 module.exports = async (app, db) => {
   if (!(db instanceof Db)) {
@@ -33,9 +32,7 @@ module.exports = async (app, db) => {
   });
 
   app.get('/api/user', async (req, res) => {
-    const bearerHeader = req.headers['authorization'];
-    const decodedJWT = jwtDecode(bearerHeader);
-    const _id = new ObjectID(decodedJWT._id);
+    const _id = req.user._id;
     try {
       let user = await usersCollection.findOne(_id);
       if (user === null) {

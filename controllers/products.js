@@ -1,6 +1,5 @@
 const { Db, ObjectID, Decimal128 } = require('mongodb');
 const jwt = require('jsonwebtoken');
-const jwtDecode = require('jwt-decode');
 
 const Puppeteer = require('./puppeteer');
 
@@ -18,13 +17,10 @@ module.exports = (app, db) => {
   });
 
   app.post('/api/products', async (req, res) => {
-    const bearerHeader = req.headers['authorization'];
-    const decodedJWT = jwtDecode(bearerHeader);
-    const _id = new ObjectID(decodedJWT._id);
+    const _id = req.user._id;
     let data = req.body;
     let url = data.url;
     let priceThreshold;
-    let isAlertAllowed = data.isAlertAllowed === "true";
     try {
       const puppet = new Puppeteer();
       let productScrapped = await puppet.scrapNameAndImage(url);
@@ -34,11 +30,12 @@ module.exports = (app, db) => {
         image: productScrapped.scrappedImage
       });
       const [product] = response.ops;
+      let isAlertAllowed = data.isAlertAllowed === "true";
       if (data.priceThreshold) {
         priceThreshold = Decimal128.fromString(data.priceThreshold);
         query = { $push: { trackedProducts: { productId: product._id, priceThreshold, isAlertAllowed }}};
       } else {
-        isAlertAllowed = false;
+        priceThreshold = Decimal128.fromString("0.00");
         query = { $push: { trackedProducts: { productId: product._id, isAlertAllowed }}};
       }
 
