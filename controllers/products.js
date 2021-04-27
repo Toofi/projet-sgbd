@@ -1,4 +1,6 @@
-const { Db, ObjectID } = require('mongodb');
+const { Db, ObjectID, Decimal128 } = require('mongodb');
+const jwt = require('jsonwebtoken');
+const jwtDecode = require('jwt-decode');
 
 const Puppeteer = require('./puppeteer');
 
@@ -7,6 +9,7 @@ module.exports = (app, db) => {
     throw new Error("Invalid Database");
   }
   const productsCollection = db.collection("products");
+  const usersCollection = db.collection("users");
   const pricesCollection = db.collection("prices");
 
   app.get('/api/products', async (req, res) => {
@@ -15,21 +18,43 @@ module.exports = (app, db) => {
   });
 
   app.post('/api/products', async (req, res) => {
-    let url = req.body;
+    const bearerHeader = req.headers['authorization'];
+    const decodedJWT = jwtDecode(bearerHeader);
+    const _id = new ObjectID(decodedJWT._id);
+    let data = req.body;
+    let url = data.url;
+    let priceThreshold = null;
+    if (data.priceThreshold) {
+      priceThreshold = Decimal128.fromString(data.priceThreshold);
+    } else {
+      priceThreshold = Decimal128.fromString("0.00");
+    }
+    let isAlertAllowed = data.isAlertAllowed === "true";
+
     try {
-      console.log(url.url);
       const puppet = new Puppeteer();
-      let productScrapped = await puppet.scrapNameAndImage(url.url);
-      console.log(productScrapped);
+      let productScrapped = await puppet.scrapNameAndImage(url);
       const response = await productsCollection.insertOne({
         name: productScrapped.scrappedName,
-        url: url.url,
+        url,
         image: productScrapped.scrappedImage
       });
+      const [product] = response.ops;
+      const trackedProductsUpdated = await usersCollection.findOneAndUpdate(
+        { _id },
+        {
+          $push: {
+            trackedProducts: {
+              productId: product._id,
+              priceThreshold,
+              isAlertAllowed,
+            }
+          }
+        }
+      );
       if (response.result.n !== 1 || response.result.ok !== 1) {
         return res.status(400).json({ error: "impossible to create the product" });
       }
-      const [product] = response.ops;
       res.json(product);
     } catch (e) {
       console.log(e);
