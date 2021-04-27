@@ -37,11 +37,11 @@ module.exports = async (db) => {
           trackedProducts: {
             bsonType: "array",
             items: {
-              bsonType: "objectId",
+              bsonType: "object",
               required: ["productId", "isAlertAllowed"],
               properties: {
                 productId: {
-                  bsonType: "string",
+                  bsonType: "objectId",
                   description: "must be an objectId and is required",
                 },
                 priceThreshold: {

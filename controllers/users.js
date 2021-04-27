@@ -3,6 +3,7 @@ const { Db, ObjectID } = require('mongodb');
 const bcrypt = require('bcrypt');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
+const jwtDecode = require('jwt-decode');
 
 module.exports = async (app, db) => {
   if (!(db instanceof Db)) {
@@ -29,6 +30,22 @@ module.exports = async (app, db) => {
       });
     })(req, res);
 
+  });
+
+  app.get('/api/user', async (req, res) => {
+    const bearerHeader = req.headers['authorization'];
+    const decodedJWT = jwtDecode(bearerHeader);
+    const _id = new ObjectID(decodedJWT._id);
+    try {
+      let user = await usersCollection.findOne(_id);
+      if (user === null) {
+        res.status(404).send({ error: "Utilisateur inexistant" });
+      }
+
+      res.json(user);
+    } catch (e) {
+      console.log(e);
+    }
   });
 
   app.get('/api/users', async (req, res) => {
