@@ -48,16 +48,6 @@ module.exports = (app, db) => {
         }
       },
       { $project: { productLookedUp: 0, priceLookedUp: 0, 'prices._id': 0, 'prices.productId': 0}}
-      // {
-      //   $addFields: {
-      //     test: "$productId",
-      //     name: { $concatArrays: "$productLookedUp.name"},
-      //     image: "$productLookedUp.image"
-      //   }
-      // },
-      // { $project: { productsLookedUp: 0 }},
-      // { $project: { total: 1, coucou: 1}}
-
     ]).toArray();
     res.json(myTrackedProducts);
   });
