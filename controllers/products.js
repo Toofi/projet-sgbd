@@ -47,9 +47,31 @@ module.exports = (app, db) => {
           prices: '$priceLookedUp'
         }
       },
-      { $project: { productLookedUp: 0, priceLookedUp: 0, 'prices._id': 0, 'prices.productId': 0}}
+      { $project: { productLookedUp: 0, priceLookedUp: 0, 'prices._id': 0, 'prices.productId': 0 } }
     ]).toArray();
     res.json(myTrackedProducts);
+  });
+
+  app.get('/api/my-product/:productId', async (req, res) => {
+    let productId = req.params.productId;
+    let myProduct = await productsCollection.aggregate([
+      { $match: { _id: new ObjectID(productId) } },
+      {
+        $lookup: {
+          from: 'prices',
+          as: "priceLookedUp",
+          localField: '_id',
+          foreignField: 'productId',
+        }
+      },
+      {
+        $addFields: {
+          prices: '$priceLookedUp'
+        }
+      },
+      { $project: { priceLookedUp: 0, 'prices._id': 0, 'prices.productId': 0 } }
+    ]).toArray();
+    res.json(myProduct);
   });
 
   app.post('/api/products', async (req, res) => {
