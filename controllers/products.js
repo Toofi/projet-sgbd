@@ -16,6 +16,52 @@ module.exports = (app, db) => {
     res.json(products);
   });
 
+  app.get('/api/my-products', async (req, res) => {
+    let userId = req.user._id;
+    let myTrackedProducts = await usersCollection.aggregate([
+      { $match: { _id: new ObjectID(userId) } },
+      { $project: { _id: 0, trackedProducts: 1 } },
+      { $unwind: '$trackedProducts' },
+      { $replaceRoot: { newRoot: '$trackedProducts' } },
+      {
+        $lookup: {
+          from: 'products',
+          as: "productLookedUp",
+          localField: 'productId',
+          foreignField: '_id',
+        }
+      },
+      {
+        $lookup: {
+          from: 'prices',
+          as: "priceLookedUp",
+          localField: 'productId',
+          foreignField: 'productId',
+        }
+      },
+      {
+        $addFields: {
+          name: { $arrayElemAt: ['$productLookedUp.name', 0] },
+          url: { $arrayElemAt: ['$productLookedUp.url', 0] },
+          image: { $arrayElemAt: ['$productLookedUp.image', 0] },
+          prices: '$priceLookedUp'
+        }
+      },
+      { $project: { productLookedUp: 0, priceLookedUp: 0, 'prices._id': 0, 'prices.productId': 0}}
+      // {
+      //   $addFields: {
+      //     test: "$productId",
+      //     name: { $concatArrays: "$productLookedUp.name"},
+      //     image: "$productLookedUp.image"
+      //   }
+      // },
+      // { $project: { productsLookedUp: 0 }},
+      // { $project: { total: 1, coucou: 1}}
+
+    ]).toArray();
+    res.json(myTrackedProducts);
+  });
+
   app.post('/api/products', async (req, res) => {
     const _id = req.user._id;
     let data = req.body;
@@ -33,10 +79,10 @@ module.exports = (app, db) => {
       let isAlertAllowed = data.isAlertAllowed === "true";
       if (data.priceThreshold) {
         priceThreshold = Decimal128.fromString(data.priceThreshold);
-        query = { $push: { trackedProducts: { productId: product._id, priceThreshold, isAlertAllowed }}};
+        query = { $push: { trackedProducts: { productId: product._id, priceThreshold, isAlertAllowed } } };
       } else {
         priceThreshold = Decimal128.fromString("0.00");
-        query = { $push: { trackedProducts: { productId: product._id, isAlertAllowed }}};
+        query = { $push: { trackedProducts: { productId: product._id, isAlertAllowed } } };
       }
 
       const trackedProductsUpdated = await usersCollection.findOneAndUpdate(
