@@ -71,4 +71,28 @@ module.exports = async (app, db) => {
       return res.status(400).json({ error: "impossible to create the user" });
     }
   });
+
+  app.put('/api/users', async (req, res) => {
+    const _id = req.user._id;
+    const data = req.body;
+    try {
+      if (data.password) {
+        data.password = bcrypt.hashSync(data.password, 10);
+      }
+      const response = await usersCollection.findOneAndUpdate(
+        { _id: new ObjectID(_id) },
+        { $set: data },
+        {
+          returnOriginal: false,
+        },
+      );
+      console.log(response);
+      if (response.ok !== 1) {
+        return res.status(400).json({ error: "impossible to update the product name" });
+      }
+      res.json(response.value);
+    } catch (e) {
+      console.log(e);
+    }
+  });
 };
