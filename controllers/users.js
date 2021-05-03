@@ -1,5 +1,5 @@
 const { json } = require('express');
-const { Db, ObjectID } = require('mongodb');
+const { Db, ObjectID, Decimal128 } = require('mongodb');
 const bcrypt = require('bcrypt');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
@@ -91,6 +91,43 @@ module.exports = async (app, db) => {
         return res.status(400).json({ error: "impossible to update the product name" });
       }
       res.json(response.value);
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+  app.put('/api/users/:productId', async (req, res) => {
+    const _id = req.user._id;
+    const data = req.body;
+    if (data.isAlertAllowed) {
+      data.isAlertAllowed = data.isAlertAllowed === "true";
+    }
+    const productId = req.params.productId;
+    let query;
+    if (!data.priceThreshold) {
+      query = { 'trackedProducts.$.isAlertAllowed': data.isAlertAllowed };
+    } else if (!data.isAlertAllowed) {
+      query = { 'trackedProducts.$.priceThreshold': Decimal128.fromString(data.priceThreshold) };
+    } else {
+      query = {
+        'trackedProducts.$.priceThreshold': Decimal128.fromString(data.priceThreshold),
+        'trackedProducts.$.isAlertAllowed': data.isAlertAllowed
+      }
+    }
+    try {
+      const response = await usersCollection.findOneAndUpdate(
+        {
+          _id: new ObjectID(_id),
+          'trackedProducts.productId': new ObjectID(productId)
+        },
+        {
+          $set: query
+        },
+        {
+          returnOriginal: false,
+        }
+      );
+      res.json(response);
     } catch (e) {
       console.log(e);
     }
