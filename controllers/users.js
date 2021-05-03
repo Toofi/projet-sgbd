@@ -55,7 +55,7 @@ module.exports = async (app, db) => {
     }
   });
 
-  app.post('/api/users', async (req, res) => {
+  app.post('/users', async (req, res) => {
     const data = req.body;
     try {
       data.password = bcrypt.hashSync(data.password, 10);

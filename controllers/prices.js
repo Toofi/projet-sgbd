@@ -11,6 +11,7 @@ module.exports = async (app, db) => {
   const pricesCollection = db.collection("prices");
   const productsCollection = db.collection("products");
   const alertsCollection = db.collection("alerts");
+  const usersCollection = db.collection("users");
 
   let productsIdAndUrls = await productsCollection.aggregate([{
     $project: { id: 1, url: 1 }
@@ -25,38 +26,55 @@ module.exports = async (app, db) => {
   let getLatestPrice = async (productId) => {
     try {
       const latestPrice = await pricesCollection.aggregate([
+        { $match: { productId: productId } },
         {
-          $match: {
-            productId: productId
-          }
-        }, {
           $group: {
             _id: null,
-            latestDocId: {
-              $max: '$_id'
-            },
-            latestPrice: {
-              $max: '$price'
-            }
+            latestDocId: { $max: '$_id' },
+            latestPrice: { $max: '$price' }
           }
-        }, {
-          $project: {
-            _id: 0,
-            latestPrice: 1
-          }
-        }
+        },
+        { $project: { _id: 0, latestPrice: 1 } }
       ]).toArray();
       return latestPrice[0].latestPrice.toString();
     } catch (e) {
       console.log(e);
     }
-  }
+  };
+
+  let getThreshold = async (productId) => {
+    try {
+      const threshold = await usersCollection.aggregate([
+        {
+          $match: {
+            'trackedProducts.productId': productId
+          }
+        },
+        {
+          $unwind: '$trackedProducts'
+        },
+        {
+          $match: {
+            'trackedProducts.productId': productId
+          }
+        },
+        {
+          $project: { '_id': 0, 'trackedProducts': 1 }
+        }
+      ]).toArray();
+      if (threshold[0].trackedProducts.priceThreshold) {
+        threshold[0].trackedProducts.priceThreshold = threshold[0].trackedProducts.priceThreshold.toString();
+      }
+      return threshold[0].trackedProducts;
+    } catch (e) {
+      return null;
+    }
+  };
 
   let puppet = new Puppeteer();
 
   let scanPrices = async (products) => {
     try {
-
       for (e in products) {
         let scrappedPrice = await puppet.scrapPrice(products[e].url);
         let data = {
@@ -77,6 +95,7 @@ module.exports = async (app, db) => {
         const [price] = response.ops;
         console.log('༼ つ ◕_◕ ༽つ ' + e + ': postPrices ok');
         const latestPrice = await getLatestPrice(data.productId);
+        const threshold = await getThreshold(data.productId);
         if (data.isPromo === true) {
           console.log("Création d'une alerte car en promo ...");
           const alert = await alertsCollection.insertOne({
@@ -89,9 +108,15 @@ module.exports = async (app, db) => {
             productId: data.productId,
             price: Decimal128.fromString(data.price)
           });
-        } else {}
-
+        } else if (threshold && threshold.isAlertAllowed === true && data.price < threshold.priceThreshold) {
+          console.log("Création d'une alerte car en-dessous du seuil d'alerte ...");
+          const alert = await alertsCollection.insertOne({
+            productId: data.productId,
+            price: Decimal128.fromString(data.price)
+          });
+        }
       }
+      console.log("Fin du scan des prix ...");
     } catch (e) {
       console.log(e);
     }

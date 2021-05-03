@@ -79,6 +79,8 @@ module.exports = (app, db) => {
     let data = req.body;
     let url = data.url;
     let priceThreshold;
+    console.log(_id);
+    console.log(data.priceThreshold);
     try {
       const puppet = new Puppeteer();
       let productScrapped = await puppet.scrapNameAndImage(url);
@@ -98,7 +100,7 @@ module.exports = (app, db) => {
       }
 
       const trackedProductsUpdated = await usersCollection.findOneAndUpdate(
-        { _id },
+        { _id: new ObjectID(_id) },
         query,
       );
       if (response.result.n !== 1 || response.result.ok !== 1) {
