@@ -9,7 +9,7 @@ module.exports = async (db) => {
     validator: {
       $jsonSchema: {
         bsonType: "object",
-        required: ["productId", "price", "created"],
+        required: ["productId", "price"],
         properties: {
           productId: {
             bsonType: "objectId",

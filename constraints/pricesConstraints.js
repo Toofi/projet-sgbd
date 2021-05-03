@@ -16,7 +16,7 @@ module.exports = async (db) => {
             description: "must be an objectId and is required",
           },
           price: {
-            bsonType: "string",
+            bsonType: "decimal",
             description: "must be a decimal and is required",
           },
           date: {
