@@ -20,6 +20,8 @@ module.exports = async (app, db) => {
   let toDecimal = (price) => {
     if (price.includes('€')) {
       return price.replace('€', '').trim().replace(',', '.');
+    } else if (price.includes('$')) {
+      return price.replace('$', '').trim();
     }
   }
 
