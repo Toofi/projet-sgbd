@@ -9,6 +9,7 @@ const databaseConnexion = require('./database/connexion');
 
 const passport = require('passport');
 const { myPassportLocal, myPassportJWT } = require('./passport');
+const alerts = require('./controllers/alerts');
 
 const app = express();
 const port = 3000;
@@ -28,6 +29,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
   products(app, db);
   prices(app, db);
   users(app, db);
+  alerts(app,db);
 
   app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
