@@ -1,5 +1,6 @@
 const { Db, ObjectID, Decimal128 } = require('mongodb');
 const jwt = require('jsonwebtoken');
+const { productSchema } = require('./joi');
 
 const Puppeteer = require('./puppeteer');
 
@@ -84,6 +85,11 @@ module.exports = (app, db) => {
     try {
       const puppet = new Puppeteer();
       let productScrapped = await puppet.scrapNameAndImage(url);
+      const value = await productSchema.validateAsync({ 
+        name: productScrapped.scrappedName,
+        url: data.url,
+        image: productScrapped.scrappedImage
+      });
       const response = await productsCollection.insertOne({
         name: productScrapped.scrappedName,
         url,
@@ -115,11 +121,16 @@ module.exports = (app, db) => {
 
   app.put('/api/products/:productId', async (req, res) => {
     const { productId } = req.params;
-    const name = req.body;
+    const data = req.body;
     const _id = new ObjectID(productId);
+    const value = await productSchema.validateAsync({ 
+      name: data.name,
+      url: data.url,
+      image: data.image
+    });
     const response = await productsCollection.findOneAndUpdate(
       { _id },
-      { $set: name },
+      { $set: data },
       {
         returnOriginal: false,
       },

@@ -1,5 +1,7 @@
 const { Db, ObjectID, Decimal128 } = require('mongodb');
 
+const { alertSchema } = require('./joi');
+
 module.exports = async (app, db) => {
   if (!(db instanceof Db)) {
     throw new Error("Invalid Database");
@@ -34,32 +36,34 @@ module.exports = async (app, db) => {
     const productId = new ObjectID(req.body.productId);
     const price = Decimal128.fromString(req.body.price);
     try {
+      const value = await alertSchema.validateAsync({ objectId: req.body.productId, price: req.body.price });
       let newAlert = await alertsCollection.insertOne({
         productId,
         price
       });
-      // console.log(newAlert);
       if (newAlert.result.ok !== 1) {
         return res.status(400).json({ error: "Impossible to post the alert" });
       }
       const [alert] = newAlert.ops;
       res.json(alert);
-    } catch (e) {
+    }
+    catch (e) {
+      res.status(400).send({ error: e });
       console.log(e);
     }
   });
 
-  // const alert = await alertsCollection.insertOne({
-  //   productId: data.productId,
-  //   price: Decimal128.fromString(data.price)
-  // });
-
   app.put('/api/alerts/:alertId', async (req, res) => {
     const _id = new ObjectID(req.params.alertId);
     const data = {};
-    data.productId = new ObjectID(req.body.productId);
-    data.price = Decimal128.fromString(req.body.price);
     try {
+      const value = await alertSchema.validateAsync({
+        objectId: req.params.alertId,
+        objectId: req.body.productId,
+        price: req.body.price
+      });
+      data.productId = new ObjectID(req.body.productId);
+      data.price = Decimal128.fromString(req.body.price);
       const alertUpdated = await alertsCollection.findOneAndUpdate(
         { _id },
         { $set: data },
@@ -67,8 +71,10 @@ module.exports = async (app, db) => {
           returnOriginal: false,
         },
       );
+      console.log(alertUpdated);
       res.json(alertUpdated.value);
     } catch (e) {
+      res.status(400).json({ error: "" });
       console.log(e);
     }
   });
