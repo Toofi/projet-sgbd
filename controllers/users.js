@@ -45,7 +45,7 @@ module.exports = async (app, db) => {
       console.log(e);
     }
   });
-
+//supprimer passwords
   app.get('/api/users', async (req, res) => {
     try {
       let users = await usersCollection.find().toArray();
