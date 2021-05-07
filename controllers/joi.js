@@ -22,15 +22,20 @@ const userSchema = Joi.object({
 
 const productSchema = Joi.object({
   name: Joi.string().max(255).required(),
-  url: Joi.string().max(255).required(),
+  url: Joi.string().max(255).pattern(new RegExp('^https://www.amazon')).required(),
   image: Joi.string().max(255).required(),
 });
 
+const priceSchema = Joi.object({
+  objectId: Joi.string().alphanum().required(),
+  price: Joi.string().pattern(new RegExp('^[0-9]{1,}.[0-9]{2}$')).required(),
+  date: Joi.date().required(),
+  isPromo: Joi.boolean().required()
+})
 
-
-module.exports =  { 
+module.exports = {
   alertSchema,
   userSchema,
   productSchema,
-
+  priceSchema,
 };

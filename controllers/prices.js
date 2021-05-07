@@ -16,7 +16,11 @@ module.exports = async (app, db) => {
   let productsIdAndUrls = await productsCollection.aggregate([{
     $project: { id: 1, url: 1 }
   }]).toArray();
-
+/**
+ * Format the price in the database to avoid spaces and prices symbols like € or $
+ * @param {string} price 
+ * @returns string
+ */
   let toDecimal = (price) => {
     if (price.includes('€')) {
       return price.replace('€', '').trim().replace(',', '.');
@@ -25,6 +29,11 @@ module.exports = async (app, db) => {
     }
   }
 
+/**
+ * Get the last Price in all the documents related to the product in the MongoDB
+ * @param {string} productId - the product Id in Mongodb 
+ * @returns string
+ */
   let getLatestPrice = async (productId) => {
     try {
       const latestPrice = await pricesCollection.aggregate([
@@ -44,6 +53,11 @@ module.exports = async (app, db) => {
     }
   };
 
+/**
+ * get the threshold price allowed from the user to create and alert
+ * @param {string} productId - the product id from the database
+ * @returns string
+ */
   let getThreshold = async (productId) => {
     try {
       const threshold = await usersCollection.aggregate([
@@ -72,10 +86,13 @@ module.exports = async (app, db) => {
       return null;
     }
   };
-
-  let puppet = new Puppeteer();
-
+  
+  /**
+   * This function checks all the products in the database, scraps their prices and creates alerts for further notifications
+   * @param {Array<object>} products - the array of all the products in the database
+   */
   let scanPrices = async (products) => {
+    let puppet = new Puppeteer();
     try {
       for (e in products) {
         let scrappedPrice = await puppet.scrapPrice(products[e].url);
@@ -123,7 +140,7 @@ module.exports = async (app, db) => {
       console.log(e);
     }
   };
-  //'1 * * * *'
+
   cron.schedule('1 * * * *', () => {
     console.log('scan de tous les produits toutes les heures ...');
     scanPrices(productsIdAndUrls);
