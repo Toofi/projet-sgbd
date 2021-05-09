@@ -1,5 +1,4 @@
 const { Db, ObjectID, Decimal128 } = require('mongodb');
-const jwt = require('jsonwebtoken');
 const { productSchema } = require('./joi');
 
 const Puppeteer = require('./puppeteer');

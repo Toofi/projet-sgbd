@@ -10,6 +10,7 @@ const databaseConnexion = require('./database/connexion');
 const passport = require('passport');
 const { myPassportLocal, myPassportJWT } = require('./passport');
 const alerts = require('./controllers/alerts');
+const Puppeteer = require('./controllers/puppeteer');
 
 const app = express();
 const port = 3000;
@@ -21,11 +22,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
   console.log('Bienvenue sur le projet SGBD de Quentin Herpoel ...');
   const db = await databaseConnexion();
 
-  //passport
   myPassportLocal(db);
   myPassportJWT(db);
 
-  //import controllers
   products(app, db);
   prices(app, db);
   users(app, db);
