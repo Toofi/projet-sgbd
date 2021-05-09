@@ -3,6 +3,7 @@ const { Db, ObjectID, Decimal128 } = require('mongodb');
 const bcrypt = require('bcrypt');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
+const { userSchema } = require('./joi');
 
 module.exports = async (app, db) => {
   if (!(db instanceof Db)) {
@@ -44,7 +45,7 @@ module.exports = async (app, db) => {
       console.log(e);
     }
   });
-
+  //supprimer passwords
   app.get('/api/users', async (req, res) => {
     try {
       let users = await usersCollection.find().toArray();
@@ -58,6 +59,13 @@ module.exports = async (app, db) => {
   app.post('/users', async (req, res) => {
     const data = req.body;
     try {
+      const value = await userSchema.validateAsync({
+        username: data.username,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        emails: data.emails,
+        password: data.password,
+      });
       data.password = bcrypt.hashSync(data.password, 10);
       const response = await usersCollection.insertOne(data);
       if (response.result.n !== 1 && response.result.ok !== 1) {
@@ -76,6 +84,13 @@ module.exports = async (app, db) => {
     const _id = req.user._id;
     const data = req.body;
     try {
+      const value = await userSchema.validateAsync({
+        username: data.username,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        emails: data.emails,
+        password: data.password,
+      });
       if (data.password) {
         data.password = bcrypt.hashSync(data.password, 10);
       }
@@ -132,4 +147,18 @@ module.exports = async (app, db) => {
       console.log(e);
     }
   });
+
+  app.delete('/api/users/:userId', async (req, res) => {
+    const _id = new ObjectID(req.params.userId);
+    try {
+      const userDeleted = await usersCollection.findOneAndDelete({ _id });
+      if (userDeleted.value === null) {
+        return res.status(404).send({ error: "user not found" });
+      }
+      res.status(204).send();
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
 };

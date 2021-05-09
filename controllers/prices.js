@@ -3,6 +3,7 @@ const { Db, ObjectID, Decimal128 } = require('mongodb');
 const Puppeteer = require('./puppeteer');
 
 let cron = require('node-cron');
+const { priceSchema } = require('./joi');
 
 module.exports = async (app, db) => {
   if (!(db instanceof Db)) {
@@ -16,7 +17,11 @@ module.exports = async (app, db) => {
   let productsIdAndUrls = await productsCollection.aggregate([{
     $project: { id: 1, url: 1 }
   }]).toArray();
-
+  /**
+   * Format the price in the database to avoid spaces and prices symbols like € or $
+   * @param {string} price 
+   * @returns string
+   */
   let toDecimal = (price) => {
     if (price.includes('€')) {
       return price.replace('€', '').trim().replace(',', '.');
@@ -25,6 +30,11 @@ module.exports = async (app, db) => {
     }
   }
 
+  /**
+   * Get the last Price in all the documents related to the product in the MongoDB
+   * @param {string} productId - the product Id in Mongodb 
+   * @returns string
+   */
   let getLatestPrice = async (productId) => {
     try {
       const latestPrice = await pricesCollection.aggregate([
@@ -44,6 +54,11 @@ module.exports = async (app, db) => {
     }
   };
 
+  /**
+   * get the threshold price allowed from the user to create and alert
+   * @param {string} productId - the product id from the database
+   * @returns string
+   */
   let getThreshold = async (productId) => {
     try {
       const threshold = await usersCollection.aggregate([
@@ -73,9 +88,12 @@ module.exports = async (app, db) => {
     }
   };
 
-  let puppet = new Puppeteer();
-
+  /**
+   * This function checks all the products in the database, scraps their prices and creates alerts for further notifications
+   * @param {Array<object>} products - the array of all the products in the database
+   */
   let scanPrices = async (products) => {
+    let puppet = new Puppeteer();
     try {
       for (e in products) {
         let scrappedPrice = await puppet.scrapPrice(products[e].url);
@@ -85,6 +103,7 @@ module.exports = async (app, db) => {
           price: toDecimal(scrappedPrice.price),
           isPromo: scrappedPrice.isPromo,
         };
+        console.log(data.isPromo);
         const response = await pricesCollection.insertOne({
           productId: data.productId,
           date: data.date,
@@ -123,7 +142,7 @@ module.exports = async (app, db) => {
       console.log(e);
     }
   };
-  //'1 * * * *'
+
   cron.schedule('1 * * * *', () => {
     console.log('scan de tous les produits toutes les heures ...');
     scanPrices(productsIdAndUrls);
@@ -166,5 +185,89 @@ module.exports = async (app, db) => {
     }
   }
   );
+
+  app.post('/api/prices', async (req, res) => {
+    let data = req.body;
+    data.price = toDecimal(data.price);
+    data.date = new Date();
+    data.isPromo = data.isPromo === "true";
+    try {
+      const value = await priceSchema.validateAsync({
+        objectId: data.productId,
+        price: data.price,
+        date: data.date,
+        isPromo: data.isPromo,
+      });
+      data.productId = new ObjectID(data.productId);
+      data.price = Decimal128.fromString(data.price);
+      let postedPrice = await pricesCollection.insertOne({
+        productId: data.productId,
+        price: data.price,
+        date: data.date,
+        isPromo: data.isPromo,
+      });
+      if (postedPrice.result.n !== 1 && postedPrice.result.ok !== 1) {
+        return res.status(400).json({ error: "Impossible to create the price" });
+      }
+      const [price] = postedPrice.ops;
+      res.json(price);
+    } catch (e) {
+      console.log(e);
+      return res.status(400).json({ error: "impossible to create the price" });
+    }
+  });
+
+  app.put('/api/prices/:price', async (req, res) => {
+    const _id = new ObjectID(req.params.price);
+    let data = req.body;
+    // data.price = toDecimal(data.price);
+    data.date = new Date();
+    data.isPromo = data.isPromo === "true";
+    try {
+      const value = await priceSchema.validateAsync({
+        objectId: data.productId,
+        price: data.price,
+        date: data.date,
+        isPromo: data.isPromo,
+      });
+      data.productId = new ObjectID(data.productId);
+      data.price = Decimal128.fromString(data.price);
+      console.log(data);
+      const updatedPrice = await pricesCollection.findOneAndUpdate(
+        { _id },
+        {
+          $set: {
+            productId: data.productId,
+            price: data.price,
+            date: data.date,
+            isPromo: data.isPromo,
+          }
+        },
+        {
+          returnOriginal: false,
+        },
+      );
+      if (updatedPrice.ok !== 1) {
+        return res.status(400).json({ error: "impossible to update the price" });
+      }
+      res.json(updatedPrice.value);
+    } catch (e) {
+      console.log(e);
+      return res.status(400).json({ error: "Impossible to update the price" });
+    }
+  });
+
+  app.delete('/api/prices/:price', async (req, res) => {
+    const _id = new ObjectID(req.params.price);
+    try {
+      const priceDeleted = await pricesCollection.findOneAndDelete({ _id });
+      if (priceDeleted.value === null) {
+        return res.status(404).send({ error: "price not found" });
+      }
+      res.status(204).send();
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
 };
