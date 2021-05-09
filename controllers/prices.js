@@ -1,4 +1,3 @@
-const { response } = require('express');
 const { Db, ObjectID, Decimal128 } = require('mongodb');
 const Puppeteer = require('./puppeteer');
 
@@ -23,6 +22,9 @@ module.exports = async (app, db) => {
    * @returns string
    */
   let toDecimal = (price) => {
+    if(!price) {
+      return '';
+    }
     if (price.includes('€')) {
       return price.replace('€', '').trim().replace(',', '.');
     } else if (price.includes('$')) {
@@ -88,59 +90,65 @@ module.exports = async (app, db) => {
     }
   };
 
+  let insertAlert = async (productId, price) => {
+    try {
+      const alert = await alertsCollection.insertOne({
+        productId: productId,
+        price: Decimal128.fromString(price),
+      });
+      return alert; 
+    } catch (e) {
+     console.log(e);
+     return null; 
+    }
+  };
+
   /**
    * This function checks all the products in the database, scraps their prices and creates alerts for further notifications
    * @param {Array<object>} products - the array of all the products in the database
    */
   let scanPrices = async (products) => {
     let puppet = new Puppeteer();
-    try {
       for (e in products) {
-        let scrappedPrice = await puppet.scrapPrice(products[e].url);
-        let data = {
-          productId: new ObjectID(products[e]._id),
-          date: new Date(),
-          price: toDecimal(scrappedPrice.price),
-          isPromo: scrappedPrice.isPromo,
-        };
-        console.log(data.isPromo);
-        const response = await pricesCollection.insertOne({
-          productId: data.productId,
-          date: data.date,
-          price: Decimal128.fromString(data.price),
-          isPromo: data.isPromo
-        });
-        if (response.result.n !== 1 || response.result.ok !== 1) {
-          console.log("impossible to create the price");
-        }
-        const [price] = response.ops;
-        console.log('༼ つ ◕_◕ ༽つ ' + e + ': postPrices ok');
-        const latestPrice = await getLatestPrice(data.productId);
-        const threshold = await getThreshold(data.productId);
-        if (data.isPromo === true) {
-          console.log("Création d'une alerte car en promo ...");
-          const alert = await alertsCollection.insertOne({
+        try {
+          let scrappedPrice = await puppet.scrapPrice(products[e].url);
+          if(!scrappedPrice.price) {
+            continue;
+          }
+          let data = {
+            productId: new ObjectID(products[e]._id),
+            date: new Date(),
+            price: toDecimal(scrappedPrice.price),
+            isPromo: scrappedPrice.isPromo,
+          };
+          const response = await pricesCollection.insertOne({
             productId: data.productId,
-            price: Decimal128.fromString(data.price)
+            date: data.date,
+            price: Decimal128.fromString(data.price),
+            isPromo: data.isPromo
           });
-        } else if (data.price < latestPrice) {
-          console.log("Création d'une alerte car baisse de produit ...");
-          const alert = await alertsCollection.insertOne({
-            productId: data.productId,
-            price: Decimal128.fromString(data.price)
-          });
-        } else if (threshold && threshold.isAlertAllowed === true && data.price < threshold.priceThreshold) {
-          console.log("Création d'une alerte car en-dessous du seuil d'alerte ...");
-          const alert = await alertsCollection.insertOne({
-            productId: data.productId,
-            price: Decimal128.fromString(data.price)
-          });
+          if (response.result.n !== 1 || response.result.ok !== 1) {
+            console.log("impossible to create the price");
+          }
+          const [price] = response.ops;
+          console.log('༼ つ ◕_◕ ༽つ ' + e + ': postPrices ok');
+          const latestPrice = await getLatestPrice(data.productId);
+          const threshold = await getThreshold(data.productId);
+          if (data.isPromo === true) {
+            console.log("Création d'une alerte car en promo ...");
+            const alert = insertAlert(data.productId, data.price);
+          } else if (data.price < latestPrice) {
+            console.log("Création d'une alerte car baisse de produit ...");
+            const alert = insertAlert(data.productId, data.price);
+          } else if (threshold && threshold.isAlertAllowed === true && data.price < threshold.priceThreshold) {
+            console.log("Création d'une alerte car en-dessous du seuil d'alerte ...");
+            const alert = insertAlert(data.productId, data.price);
+          }
+        } catch (e) {
+          console.log(e);
         }
       }
       console.log("Fin du scan des prix ...");
-    } catch (e) {
-      console.log(e);
-    }
   };
 
   cron.schedule('1 * * * *', () => {
@@ -220,7 +228,6 @@ module.exports = async (app, db) => {
   app.put('/api/prices/:price', async (req, res) => {
     const _id = new ObjectID(req.params.price);
     let data = req.body;
-    // data.price = toDecimal(data.price);
     data.date = new Date();
     data.isPromo = data.isPromo === "true";
     try {

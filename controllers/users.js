@@ -1,4 +1,3 @@
-const { json } = require('express');
 const { Db, ObjectID, Decimal128 } = require('mongodb');
 const bcrypt = require('bcrypt');
 const passport = require('passport');
