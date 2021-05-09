@@ -258,53 +258,16 @@ module.exports = async (app, db) => {
   });
 
   app.delete('/api/prices/:price', async (req, res) => {
-    const _id = req.params.price;
+    const _id = new ObjectID(req.params.price);
+    try {
+      const priceDeleted = await pricesCollection.findOneAndDelete({ _id });
+      if (priceDeleted.value === null) {
+        return res.status(404).send({ error: "price not found" });
+      }
+      res.status(204).send();
+    } catch (e) {
+      console.log(e);
+    }
   });
 
-  // app.delete('/api/products/:productId', async (req, res) => {
-  //   const { productId } = req.params;
-  //   const _id = new ObjectID(productId);
-  //   const productResponse = await productsCollection.findOneAndDelete({ _id });
-  //   if (productResponse.value === null) {
-  //     return res.status(404).send({ error: "produit introuvable, impossible de le supprimer." });
-  //   }
-  //   const pricesResponse = await pricesCollection.deleteMany({ "productId": _id });
-  //   if (pricesResponse.value === null) {
-  //     return res.status(404).send({ error: "aucun prix à supprimer" });
-  //   }
-  //   res.status(204).send();
-  // });
-
 };
-
-
-// app.put('/api/users', async (req, res) => {
-//   const _id = req.user._id;
-//   const data = req.body;
-//   try {
-//     const value = await userSchema.validateAsync({ 
-//       username: data.username, 
-//       firstName: data.firstName,
-//       lastName: data.lastName,
-//       emails: data.emails,
-//       password: data.password,
-//     });
-//     if (data.password) {
-//       data.password = bcrypt.hashSync(data.password, 10);
-//     }
-//     const response = await usersCollection.findOneAndUpdate(
-//       { _id: new ObjectID(_id) },
-//       { $set: data },
-//       {
-//         returnOriginal: false,
-//       },
-//     );
-//     console.log(response);
-//     if (response.ok !== 1) {
-//       return res.status(400).json({ error: "impossible to update the product name" });
-//     }
-//     res.json(response.value);
-//   } catch (e) {
-//     console.log(e);
-//   }
-// });

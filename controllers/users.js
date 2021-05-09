@@ -45,7 +45,7 @@ module.exports = async (app, db) => {
       console.log(e);
     }
   });
-//supprimer passwords
+  //supprimer passwords
   app.get('/api/users', async (req, res) => {
     try {
       let users = await usersCollection.find().toArray();
@@ -59,8 +59,8 @@ module.exports = async (app, db) => {
   app.post('/users', async (req, res) => {
     const data = req.body;
     try {
-      const value = await userSchema.validateAsync({ 
-        username: data.username, 
+      const value = await userSchema.validateAsync({
+        username: data.username,
         firstName: data.firstName,
         lastName: data.lastName,
         emails: data.emails,
@@ -84,8 +84,8 @@ module.exports = async (app, db) => {
     const _id = req.user._id;
     const data = req.body;
     try {
-      const value = await userSchema.validateAsync({ 
-        username: data.username, 
+      const value = await userSchema.validateAsync({
+        username: data.username,
         firstName: data.firstName,
         lastName: data.lastName,
         emails: data.emails,
@@ -147,4 +147,18 @@ module.exports = async (app, db) => {
       console.log(e);
     }
   });
+
+  app.delete('/api/users/:userId', async (req, res) => {
+    const _id = new ObjectID(req.params.userId);
+    try {
+      const userDeleted = await usersCollection.findOneAndDelete({ _id });
+      if (userDeleted.value === null) {
+        return res.status(404).send({ error: "user not found" });
+      }
+      res.status(204).send();
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
 };
