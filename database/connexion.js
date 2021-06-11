@@ -4,24 +4,24 @@ const pricesConstraints = require('../constraints/pricesConstraints');
 const productsConstraints = require('../constraints/productsConstraints');
 const alertsConstraints = require('../constraints/alertsConstraints');
 
-let tunnel = require('tunnel-ssh');
+// let tunnel = require('tunnel-ssh');
 
-var config = {
-  username: 'ecole',
-  password: 'ecole2021',
-  host: '135.125.95.178',
-  port: 22,
-  dstHost: 'localhost',
-  dstPort: 27017,
-  localHost: '127.0.0.1',
-  localPort: 27033
-};
+// var config = {
+//   username: 'ecole',
+//   password: 'ecole2021',
+//   host: '135.125.95.178',
+//   port: 22,
+//   dstHost: 'localhost',
+//   dstPort: 27017,
+//   localHost: '127.0.0.1',
+//   localPort: 27033
+// };
 
-const url = "mongodb://localhost:27033";
+const url = "mongodb://135.125.95.178:27017";
 const dbName = 'quentin';
 
 const getDb = async () => {
-  tunnel(config, function (error, server) {  });
+  // tunnel(config, function (error, server) {  });
     let db;
     try {
       const client = await MongoClient.connect(url, { useUnifiedTopology: true });
