@@ -25,14 +25,14 @@ module.exports = async (app, db) => {
         }
         delete user.password;
         const token = jwt.sign(user, "maSignature");
-        return res.json({ user, token });
+        return res.json(token);
       });
     })(req, res);
 
   });
 
-  app.get('/api/user', async (req, res) => {
-    const _id = req.user._id;
+  app.get('/api/profile/:_id', async (req, res) => {
+    const { _id } = req.params._id;
     try {
       let user = await usersCollection.findOne(_id);
       if (user === null) {
@@ -57,6 +57,7 @@ module.exports = async (app, db) => {
 
   app.post('/users', async (req, res) => {
     const data = req.body;
+    console.log(data);
     try {
       const value = await userSchema.validateAsync({
         username: data.username,

@@ -29,6 +29,7 @@ class Puppeteer {
       return price;
     } catch (e) {
       console.log('Impossible to scrap the price ...');
+      console.log('defect URL : ', url);
       console.log(e);
       return null;
     }

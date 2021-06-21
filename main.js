@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 
 const products = require('./controllers/products');
 const prices = require('./controllers/prices');
@@ -15,6 +16,12 @@ const Puppeteer = require('./controllers/puppeteer');
 const app = express();
 const port = 3000;
 
+const corsOptions = {
+  origin: true,
+  credentials: true
+}
+
+app.use(cors(corsOptions));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 (async () => {
