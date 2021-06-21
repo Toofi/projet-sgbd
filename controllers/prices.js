@@ -151,7 +151,7 @@ module.exports = async (app, db) => {
       console.log("Fin du scan des prix ...");
   };
 
-  cron.schedule('1 * * * *', () => {
+  cron.schedule('* 6 * * *', () => {
     console.log('scan de tous les produits toutes les heures ...');
     scanPrices(productsIdAndUrls);
   });

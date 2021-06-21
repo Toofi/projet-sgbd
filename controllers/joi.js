@@ -15,7 +15,7 @@ const userSchema = Joi.object({
 
 const productSchema = Joi.object({
   name: Joi.string().max(255).required(),
-  url: Joi.string().max(255).pattern(new RegExp('^https://www.amazon')).required(),
+  url: Joi.string().pattern(new RegExp('^https://www.amazon')).required(),
   image: Joi.string().max(255).required(),
 });
 

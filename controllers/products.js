@@ -84,7 +84,7 @@ module.exports = (app, db) => {
     try {
       const puppet = new Puppeteer();
       let productScrapped = await puppet.scrapNameAndImage(url);
-      const value = await productSchema.validateAsync({ 
+      const value = await productSchema.validateAsync({
         name: productScrapped.scrappedName,
         url: data.url,
         image: productScrapped.scrappedImage
@@ -122,7 +122,7 @@ module.exports = (app, db) => {
     const { productId } = req.params;
     const data = req.body;
     const _id = new ObjectID(productId);
-    const value = await productSchema.validateAsync({ 
+    const value = await productSchema.validateAsync({
       name: data.name,
       url: data.url,
       image: data.image
@@ -150,6 +150,10 @@ module.exports = (app, db) => {
     const pricesResponse = await pricesCollection.deleteMany({ "productId": _id });
     if (pricesResponse.value === null) {
       return res.status(404).send({ error: "aucun prix à supprimer" });
+    }
+    const usersResponse = await usersCollection.updateOne({ "trackedProducts.productId": _id }, { $pull: { "trackedProducts": { "productId": _id } } });
+    if (usersResponse.value === null) {
+      return res.status(404).send({ error: "aucun produit tracké à supprimer" });
     }
     res.status(204).send();
   });
