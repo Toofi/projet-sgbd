@@ -31,14 +31,13 @@ module.exports = async (app, db) => {
 
   });
 
-  app.get('/api/profile/:_id', async (req, res) => {
-    const { _id } = req.params._id;
+  app.get('/api/profile/:id', async (req, res) => {
+    const _id  = new ObjectID(req.params.id);
     try {
       let user = await usersCollection.findOne(_id);
       if (user === null) {
         res.status(404).send({ error: "Utilisateur inexistant" });
       }
-
       res.json(user);
     } catch (e) {
       console.log(e);
